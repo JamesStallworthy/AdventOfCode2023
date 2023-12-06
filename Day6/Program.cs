@@ -43,7 +43,7 @@ class Race
     }
 
     //Basically a binary search
-    public long GetNumberOfWaysToWinOptermised(){
+    public long GetNumberOfWaysToWinOptimised(){
         var lowestWinner = GetLowestWinner(0, Time/2);
         var greatestWinner = GetGreatestWinner(Time/2, Time);
 
@@ -124,9 +124,9 @@ class Program
         sw = new Stopwatch();
         sw.Start();
         
-        long part2AnswerOptimised = part2Race.GetNumberOfWaysToWinOptermised();
+        long part2AnswerOptimised = part2Race.GetNumberOfWaysToWinOptimised();
         sw.Stop();
-        System.Console.WriteLine($"Part2 Answer Optermised: {part2AnswerOptimised}. Took {sw.Elapsed.TotalSeconds} seconds");
+        System.Console.WriteLine($"Part2 Answer Optimised: {part2AnswerOptimised}. Took {sw.Elapsed.TotalSeconds} seconds");
     }
 }
 
