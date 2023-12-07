@@ -1,7 +1,7 @@
 ﻿namespace Day7;
 
-class Hand{
-    static Dictionary<char, int> CardMap = new Dictionary<char, int>(){
+public class Hand{
+    public static Dictionary<char, int> CardMap = new Dictionary<char, int>(){
         {'2', 0},
         {'3', 1},
         {'4', 2},
@@ -11,14 +11,13 @@ class Hand{
         {'8', 6},
         {'9', 7},
         {'T', 8},
-        //{'J', 9}, Part1
-        {'J', -1},
+        {'J', 9},
         {'Q', 10},
         {'K', 11},
         {'A', 12},
     };
 
-    static Dictionary<int, char> ReversedCardMap = CardMap.ToDictionary(x => x.Value, x => x.Key);
+    static Dictionary<int, char> ReversedCardMap {get => CardMap.ToDictionary(x => x.Value, x => x.Key); }
 
     public List<int> Cards = new List<int>();
 
@@ -34,7 +33,7 @@ class Hand{
     //6: High card
     public int Type {get; private set;}
 
-    public Hand(string hand)
+    public Hand(string hand, bool part2 = false)
     {
         var splitHand = hand.Split(" ");
         Bid = int.Parse(splitHand[1]);
@@ -43,8 +42,10 @@ class Hand{
             Cards.Add(CardMap[c]);
         }
 
-        //CalculateType(); //Part1
-        CalculateTypePart2();
+        if(part2)
+            CalculateType();
+        else
+            CalculateTypePart2();
     }
 
     class Pairs{
@@ -141,7 +142,7 @@ class Hand{
     }
 }
 
-class CustomHandComparer : IComparer<Hand>
+public class CustomHandComparer : IComparer<Hand>
 {
     public int Compare(Hand? x, Hand? y)
     {
@@ -176,12 +177,13 @@ class Program
 {
     static void Main(string[] args)
     {
+        Hand.CardMap['J'] = -1;
         List<Hand> hands = new List<Hand>();
         var file = File.ReadAllLines("./input.txt");
 
         foreach (var line in file)
         {
-            hands.Add(new Hand(line));
+            hands.Add(new Hand(line, true));
         }
 
         hands.Sort(new CustomHandComparer());
@@ -193,46 +195,5 @@ class Program
         }
 
         System.Console.WriteLine($"Answer: {sum}");
-    }
-
-    static void TestSorting(string[] file){
-        List<Hand> hands = new List<Hand>();
-        System.Console.WriteLine($"Original:");
-        foreach (var line in file)
-        {
-            hands.Add(new Hand(line));
-            System.Console.WriteLine(hands.Last());
-        }
-
-        hands.Sort(new CustomHandComparer());
-
-        System.Console.WriteLine($"Sorted:");
-        foreach (var hand in hands)
-        {
-            System.Console.WriteLine(hand);
-        }
-    }
-
-    static void TestHandTypes(){
-        var hand = new Hand("AAAAA 10");
-        System.Console.WriteLine($"Five a kind: {hand.Type}");
-
-        hand = new Hand("AA8AA 10");
-        System.Console.WriteLine($"Four a kind: {hand.Type}");
-
-        hand = new Hand("23332 10");
-        System.Console.WriteLine($"Full house: {hand.Type}");
-
-        hand = new Hand("TTT98 10");
-        System.Console.WriteLine($"Three a kind: {hand.Type}");
-
-        hand = new Hand("23432 10");
-        System.Console.WriteLine($"Two pair: {hand.Type}");
-
-        hand = new Hand("A23A4 10");
-        System.Console.WriteLine($"One pair: {hand.Type}");
-
-        hand = new Hand("23456 10");
-        System.Console.WriteLine($"High card {hand.Type}");
     }
 }
