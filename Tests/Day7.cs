@@ -1,5 +1,4 @@
 using System.Text;
-using Day7;
 namespace Day7;
 public class Day7Tests
 {
