@@ -1,6 +1,6 @@
 using Day9;
 
-namespace Day8;
+namespace Day9;
 
 public class Day9Tests{
 	[Test]
