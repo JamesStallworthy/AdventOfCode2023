@@ -43,8 +43,15 @@ public class Pipe{
                 PipeMapping.Add('S', 'E');
                 PipeMapping.Add('E', 'S');
                 break;
+            case 'C':
             case 'S':
+                PipeMapping.Add('N', 'S');
+                PipeMapping.Add('S', 'N');
+                PipeMapping.Add('E', 'W');
+                PipeMapping.Add('W', 'E');
+                break;
             case '.':
+            case ' ':
                 break;
             default:
                 throw new Exception("Invalid pipe has been parsed");
@@ -68,19 +75,19 @@ public class StartNode: Node{
     public Dictionary<char,Node> FindConnectedPipes(Map map){
         Dictionary<char,Node> Connection = new Dictionary<char,Node>();
         //try each direction
-        if (TryGetNodeInDirection('N', map, out Node? NorthernNode)){
+        if (TryGetNodeInDirection('N', map.Grid, out Node? NorthernNode, false)){
             if (NorthernNode.CanConnectFrom('S'))
                 Connection.Add('S',NorthernNode);
         }
-        if (TryGetNodeInDirection('S', map, out Node? SouthernNode)){
+        if (TryGetNodeInDirection('S', map.Grid, out Node? SouthernNode, false)){
             if (SouthernNode.CanConnectFrom('N'))
                 Connection.Add('N',SouthernNode);
         }
-        if (TryGetNodeInDirection('E', map, out Node? EasternNode)){
+        if (TryGetNodeInDirection('E', map.Grid, out Node? EasternNode, false)){
             if (EasternNode.CanConnectFrom('W'))
                 Connection.Add('W',EasternNode);
         }
-        if (TryGetNodeInDirection('W', map, out Node? WesternNode)){
+        if (TryGetNodeInDirection('W', map.Grid, out Node? WesternNode, false)){
             if (WesternNode.CanConnectFrom('E'))
                 Connection.Add('E',WesternNode);
         }
@@ -111,36 +118,46 @@ public class Node{
         return Pipe.CanConnectFrom(direction);
     }
 
-    public bool TryGetNodeInDirection(char direction,Map map, out Node? NodeInDirection){
+    public bool TryGetNodeInDirection(char direction,List<List<Node>> Grid, out Node? NodeInDirection, bool skipConnectionNode){
         NodeInDirection = null;
+        int offset = 1;
+        if (skipConnectionNode){
+            offset = 2;
+        }
+
         switch (direction)
         {
             case 'N':
-                if (Y > 0){
-                    NodeInDirection = map.Grid[Y - 1][X];
+                if (Y >= offset){
+                    NodeInDirection = Grid[Y - offset][X];
                 }
                 break;
             case 'S':
-                if (Y < map.Grid.Count - 1){
-                    NodeInDirection = map.Grid[Y + 1][X];
+                if (Y < Grid.Count - offset){
+                    NodeInDirection = Grid[Y + offset][X];
                 }
                 break;
             case 'W':
-                if (X > 0){
-                    NodeInDirection = map.Grid[Y][X - 1];
+                if (X >= offset){
+                    NodeInDirection = Grid[Y][X - offset];
                 }
                 break;
             case 'E':
-                if (X < map.Grid[0].Count - 1){
-                    NodeInDirection = map.Grid[Y][X + 1];
+                if (X < Grid[0].Count - offset){
+                    NodeInDirection = Grid[Y][X + offset];
                 }
                 break;
         }
+        if (NodeInDirection == null)
+            return false;
 
-        return NodeInDirection.Pipe.PipeChar != '.';
+        if (skipConnectionNode)
+            return NodeInDirection.Pipe.PipeChar != '.';
+
+        return NodeInDirection != null;
     }
 
-    public void Path(Map map, int distance, char inboundDirection){
+    public virtual void Path(Map map, int distance, char inboundDirection){
         distance = distance + 1;
 
         if (this.Distance != -1 && this.Distance <= distance){
@@ -152,7 +169,7 @@ public class Node{
         Node nextNode;
 
         char outputDirection = Pipe.OutputDirection(inboundDirection);
-        if (!TryGetNodeInDirection(outputDirection, map, out nextNode)){
+        if (!TryGetNodeInDirection(outputDirection, map.Grid, out nextNode, false)){
             throw new Exception($"Unable to Path from X:{X}, Y:{Y}");
         }
 
@@ -163,7 +180,7 @@ public class Node{
         nextNode.Path(map, distance, InvertDirection(outputDirection));
     }
 
-    private char InvertDirection(char dir){
+    protected char InvertDirection(char dir){
         if (dir == 'N'){
             return 'S';
         }
@@ -279,6 +296,10 @@ class Program
 
         map.CalculateMapDistances();
 
-        System.Console.WriteLine(map.GetFurthestDistance());
+        System.Console.WriteLine($"Part1 Solution is {map.GetFurthestDistance()}");
+
+        MapPart2 map2 = new MapPart2(file);
+        map2.ConnectPipes();
+        System.Console.WriteLine($"Part2 Solution is {map2.FindReachable()}");
     }
 }
