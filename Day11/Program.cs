@@ -4,7 +4,7 @@ using System.Text;
 namespace Day11;
 
 public class Universe{
-    List<List<Point>> Grid = new List<List<Point>>();
+    public List<List<Point>> Grid = new List<List<Point>>();
     Dictionary<int, Galaxy> Galaxies = new Dictionary<int, Galaxy>();
 
     public void Init(string[] input){
@@ -35,58 +35,34 @@ public class Universe{
         }
     }
 
-    public void Expand(){
-        ExpandRows();
-        ExpandColumns();
-        ComputePositions();
+    public void Expand(int by){
+        ExpandRows(by);
+        ExpandColumns(by);
     }
 
-    private void ComputePositions(){
+    private void ExpandRows(int by){
         for (int y = 0; y < Grid.Count; y++)
         {
-            for (int x = 0; x < Grid[y].Count; x++)
-            {
-                Grid[y][x].SetLoc(x, y);
+            if (Grid[y].Where(x => !(x is EmptySpace)).Count() == 0){
+                for (int x = 0; x < Grid[y].Count; x++)
+                {
+                    Grid[y][x].Height = Grid[y][x].Height  * by;
+                }
             }
         }
     }
 
-    private void ExpandRows(){
-        for (int i = 0; i < Grid.Count; i++)
+    private void ExpandColumns(int by){
+        for (int x = 0; x < Grid[0].Count; x++)
         {
-            if (Grid[i].Where(x => !(x is EmptySpace)).Count() == 0){
-                //All the values must be empty space
-                var newRow = CreateEmptyRow(Grid[i].Count);
-
-                Grid.Insert(i, newRow);
-                i++;
-            }
-        }
-    }
-
-    private void ExpandColumns(){
-        for (int i = 0; i < Grid[0].Count; i++)
-        {
-            var emptyColumn = Grid.Select(x => x[i]).Where(x => !(x is EmptySpace)).Count() == 0;
+            var emptyColumn = Grid.Select(p => p[x]).Where(p => !(p is EmptySpace)).Count() == 0;
             if (emptyColumn){
                 for (int y = 0; y < Grid.Count; y++)
                 {
-                    Grid[y].Insert(i,new EmptySpace(0,0));
+                    Grid[y][x].Width = Grid[y][x].Width * by;
                 }
-                i++;
             }
         }
-    }
-
-    private List<Point> CreateEmptyRow(int width){
-        List<Point> temp = new List<Point>();
-
-        for (int i = 0; i < width; i++)
-        {
-            temp.Add(new EmptySpace(0,0));
-        }
-
-        return temp;
     }
 
     public string Display(){
@@ -109,11 +85,11 @@ public class Universe{
         return sb.ToString();
     }
 
-    public int SumOfAllDistances(){
+    public long SumOfAllDistances(){
         List<int> GalaxyIds = Galaxies.Select(x => x.Key).ToList();
         var combinations = GalaxyIds.SelectMany((x, i) => GalaxyIds.Skip(i + 1), (x, y) => Tuple.Create(x, y));
 
-        int sum = 0;
+        long sum = 0;
         foreach (var item in combinations)
         {
             sum += FindDistanceBetweenGalaxies(item.Item1, item.Item2);
@@ -122,14 +98,14 @@ public class Universe{
         return sum;
     }
 
-    public int FindDistanceBetweenGalaxies(int src, int dest){
+    public long FindDistanceBetweenGalaxies(int src, int dest){
         Galaxy srcGalaxy = Galaxies[src];
         Galaxy destGalaxy = Galaxies[dest];
 
         return TraverseBetween(srcGalaxy, destGalaxy, 0);
     }
 
-    private int TraverseBetween(Point currentPos, Point EndGoal, int DistanceCovered){
+    private long TraverseBetween(Point currentPos, Point EndGoal, long DistanceCovered){
         if (currentPos == EndGoal){
             return DistanceCovered;
         }
@@ -139,27 +115,36 @@ public class Universe{
         Point? left = GetLeft(currentPos);
         Point? right = GetRight(currentPos);
 
-        List<KeyValuePair<double, Point>> Distances = new List<KeyValuePair<double, Point>>();
+        List<Tuple<double, char, Point>> Distances = new List<Tuple<double,char, Point>>();
 
-        if (up != null){
-            Distances.Add(new KeyValuePair<double, Point>(up.DistanceToGoal(EndGoal), up));
+        if (up != null && currentPos.Y != EndGoal.Y){
+            Distances.Add(new Tuple<double,char, Point>(up.DistanceToGoal(EndGoal,this),'v', up));
         }
 
-        if (down != null){
-            Distances.Add(new KeyValuePair<double, Point>(down.DistanceToGoal(EndGoal), down));
+        if (down != null && currentPos.Y != EndGoal.Y){
+            Distances.Add(new Tuple<double,char, Point>(down.DistanceToGoal(EndGoal, this), 'v',down));
         }
 
-        if (left != null){
-            Distances.Add(new KeyValuePair<double, Point>(left.DistanceToGoal(EndGoal), left));
+        if (left != null && currentPos.X != EndGoal.X){
+            Distances.Add(new Tuple<double,char, Point>(left.DistanceToGoal(EndGoal, this),'h',left));
         }
 
-        if (right != null){
-            Distances.Add(new KeyValuePair<double, Point>(right.DistanceToGoal(EndGoal), right));
+        if (right != null && currentPos.X != EndGoal.X){
+            Distances.Add(new Tuple<double,char, Point>(right.DistanceToGoal(EndGoal, this), 'h', right));
         }
 
-        var closest = Distances.OrderBy(x => x.Key).First();
+        var orderedDistances = Distances.OrderBy(x => x.Item1).ToList();
+        var closest = orderedDistances[0];
+        long newDistance = DistanceCovered;
+
+        if (closest.Item2 == 'h'){
+            newDistance += closest.Item3.Width;
+        }
+        else{
+            newDistance += closest.Item3.Height;
+        }
         
-        return TraverseBetween(closest.Value, EndGoal, DistanceCovered + 1);
+        return TraverseBetween(closest.Item3, EndGoal, newDistance);
     }
 
     private Point? GetAbove(Point currentPos){
@@ -222,6 +207,8 @@ public class EmptySpace: Point{
 }
 
 public class Point{
+    public int Width { get; set; } = 1;
+    public int Height { get; set; } = 1;
     public int X {get; private set;}
     public int Y {get; private set;}
     public Point(int x, int y)
@@ -235,10 +222,52 @@ public class Point{
         this.Y = y;  
     }
 
-    internal double DistanceToGoal(Point goal)
+    private int FindXDistance(Point goal, Universe universe){
+        int distance = 0;
+        int direction = 0; //-1, 1
+
+        if (goal.X - X > 0){
+            direction = 1;
+        }
+        else{
+            direction = -1;
+        }
+
+        int currentX = X;
+        while (currentX != goal.X){
+            currentX = currentX + direction;
+
+            distance += universe.Grid[Y][currentX].Width;
+        }
+
+        return distance;
+    }
+
+    private int FindYDistance(Point goal, Universe universe){
+        int distance = 0;
+        int direction = 0; //-1, 1
+
+        if (goal.Y - Y > 0){
+            direction = 1;
+        }
+        else{
+            direction = -1;
+        }
+
+        int currentY = Y;
+        while (currentY != goal.Y){
+            currentY = currentY + direction;
+
+            distance += universe.Grid[currentY][X].Height;
+        }
+
+        return distance;
+    }
+
+    internal double DistanceToGoal(Point goal, Universe universe)
     {
-        int a = goal.X - X;
-        int b = goal.Y - Y;
+        int a = FindXDistance(goal, universe);
+        int b = FindYDistance(goal, universe);
 
         return Math.Sqrt(Math.Pow(a,2) + Math.Pow(b, 2));
     }
@@ -254,8 +283,16 @@ class Program
 
         universe.Init(file);
 
-        universe.Expand();
+        universe.Expand(2);
 
         System.Console.WriteLine(universe.SumOfAllDistances());
+        
+        Universe universe2 = new Universe();
+
+        universe2.Init(file);
+
+        universe2.Expand(1000000);
+
+        System.Console.WriteLine(universe2.SumOfAllDistances());
     }
 }
