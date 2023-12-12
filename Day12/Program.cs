@@ -1,25 +1,42 @@
-﻿namespace Day12;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
+namespace Day12;
 
 public class Row{
     public Row(string row)
     {
         var splitRow = row.Split(" ");
 
-        SourceSpring = splitRow[0].ToCharArray().ToList();
+        Springs = splitRow[0];
 
-        Groups = splitRow[1].Split(',').Select(x => int.Parse(x)).ToList();
+        Groups = splitRow[1].Split(',').Select(x => long.Parse(x)).ToList();
     }
 
-    List<char> SourceSpring = new List<char>();
-    List<int> Groups = new List<int>();
+    string Springs;
+    List<long> Groups = new List<long>();
 
-    public int FindValidCombinations(){
-        return Find(0, -1, 0, 0);
+    Dictionary<string, long> Cache = new Dictionary<string, long>();
+
+    public long FindValidCombinations(){
+        return Find(Springs, ' ', -1, 0, 0);
+    }
+
+    private long FindLru(string springs, char previousChar,int groupIndex, long remainingGroupCount, long totalCount){
+        string key = $"{previousChar}{springs}_{groupIndex}_{remainingGroupCount}";
+        if (Cache.ContainsKey(key) && !key.StartsWith('?'))
+            return Cache[key];
+        else{
+            var result = Find(springs, previousChar, groupIndex, remainingGroupCount, totalCount);
+            if (!key.StartsWith('?'))
+                Cache.Add(key, result);
+            return result;
+        }
     }
 
     //#.#.### 1,1,3
-    private int Find(int index, int groupIndex, int remainingGroupCount, int totalCount){
-        if (index >= SourceSpring.Count){
+    private long Find(string springs, char previousChar,int groupIndex, long remainingGroupCount, long totalCount){
+        if (springs.Length == 0){
             if (remainingGroupCount != 0){
                 return 0;
             }
@@ -31,11 +48,11 @@ public class Row{
             return 1;
         }
 
-        char currentChar = SourceSpring[index];
+        char currentChar = springs.First();
 
         if (currentChar == '#'){
             if (remainingGroupCount == 0){
-                if (index > 0 && SourceSpring[index - 1] == '#'){
+                if (previousChar == '#'){
                     return 0;
                 }
                 groupIndex ++;
@@ -56,18 +73,17 @@ public class Row{
         }
         else if (currentChar == '?'){
             //Act like the current char is #
-            SourceSpring[index] = '#';
-            var total1 = Find(index,groupIndex,remainingGroupCount,totalCount);
+            string newSprings1 = "#" + springs[1..];
+            var total1 = FindLru(newSprings1,previousChar,groupIndex,remainingGroupCount,totalCount);
 
             //Act like the current char is .
-            SourceSpring[index] = '.';
-            var total2 = Find(index,groupIndex,remainingGroupCount,totalCount);
+            string newSprings2 = "." + springs[1..];
+            var total2 = FindLru(newSprings2,previousChar,groupIndex,remainingGroupCount,totalCount);
 
-            SourceSpring[index] = '?';
             return totalCount + total1 + total2;
         }
 
-        return Find(index + 1, groupIndex, remainingGroupCount, totalCount);
+        return FindLru(springs[1..],currentChar, groupIndex, remainingGroupCount, totalCount);
     }
 }
 
@@ -76,36 +92,28 @@ class Program
     static void Main(string[] args)
     {
         var file = File.ReadAllLines("./input.txt");
-
-        int sum = 0;
-        int sum2 = 0;
+        Stopwatch sw = Stopwatch.StartNew();
+        long sum = 0;
+        long sum2 = 0;
         foreach (var item in file)
         {
             Row row = new Row(item);
-
-            sum += row.FindValidCombinations();
 
             sum += row.FindValidCombinations();
         }
-
+        sw.Stop();
         System.Console.WriteLine($"Part1 Sum: {sum}");
+        System.Console.WriteLine($"Part1 time: {sw.Elapsed.TotalSeconds}");
 
-        long index = 0;
-
+        sw = Stopwatch.StartNew();
         foreach (var item in file)
         {
-            Row row = new Row(item);
-
-            sum += row.FindValidCombinations();
-
-            sum += row.FindValidCombinations();
-
             string multiCopies = "";
 
             List<string> Springs = new List<string>();
             List<string> Conts = new List<string>();
             var splitRow = item.Split(' ');
-            for (int i = 0; i < 5; i++)
+            for (long i = 0; i < 5; i++)
             {
                 Springs.Add(splitRow[0]); 
                 Conts.Add(splitRow[1]); 
@@ -116,11 +124,9 @@ class Program
             Row row2 = new Row(multiCopies);
 
             sum2 += row2.FindValidCombinations();
-
-            System.Console.WriteLine($"{index}/{file.Length}");
-            index ++;
         }
 
         System.Console.WriteLine($"Part2 Sum: {sum2}");
+        System.Console.WriteLine($"Part2 time: {sw.Elapsed.TotalSeconds}");
     }
 }
