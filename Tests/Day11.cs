@@ -1,5 +1,6 @@
 using Day11;
 
+namespace Day11;
 public class Day11Tests{
 	[Test]
 	public void Test1(){
