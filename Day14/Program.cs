@@ -258,7 +258,7 @@ class Program
     private static void HandlePattern(Dish dish, long currentCyle, long totalCycles){
         //How long is the cycle of patterns
         long patternLength = FindPatternLength(new Dish(dish));
-        
+
         long remainingCycles = totalCycles - currentCyle;
 
         long remainder = (remainingCycles % patternLength) - 1;
@@ -267,6 +267,8 @@ class Program
         {
             dish.Cycle();
         }
+
+        System.Console.WriteLine($"Sum Part2: {dish.Sum1()}");
     }
 
     private static long FindPatternLength(Dish dish){
