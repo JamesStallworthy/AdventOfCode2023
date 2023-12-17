@@ -85,6 +85,7 @@ namespace Day2{
 			int sumOfPower = 0;
 			for	(int i = 0; i < Games.Count; i++){
 				if (Games[i].IsPossible(12,13,14)){
+					System.Console.WriteLine(i + 1);
 					sum += (i + 1);
 				}
 

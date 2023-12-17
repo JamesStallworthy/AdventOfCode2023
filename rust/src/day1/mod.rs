@@ -1,13 +1,5 @@
 use std::usize;
 
-fn load_input() -> String {
-    return std::fs::read_to_string("./day1/input.txt").expect("expected to load project file");
-}
-
-fn split_into_row(full_text: String) -> Vec<String> {
-    return full_text.lines().map(|s: &str| s.to_string()).collect();
-}
-
 fn get_word_number(include_words: bool, row: &String, i: usize) -> Result<u32, &str> {
     let number_words: Vec<String> = vec![
         "one".to_string(),
@@ -76,7 +68,7 @@ pub fn get_sum(rows: &Vec<String>, include_words: bool) -> u32 {
 }
 
 pub fn solve() {
-    let rows = split_into_row(load_input());
+    let rows = crate::utils::split_into_row(crate::utils::load_input("./day1/input.txt"));
 
     println!("{}", get_sum(&rows, false));
     println!("{}", get_sum(&rows, true));
