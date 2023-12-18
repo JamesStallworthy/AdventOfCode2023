@@ -24,9 +24,46 @@ public class Instruction{
     }
 
     public Directions Direction {get; private set;}
-    public int Steps {get; private set;}
+    public long Steps {get; private set;}
+
+    public Instruction(string instruction, bool part2)
+    {
+        var splitInstructions = instruction.Split(" ");
+
+        var hex = splitInstructions.Last()[1..^1];
+
+        hex = hex.Replace("#", "");
+
+        string step = hex[..^1];
+
+        string dir = hex[^1..];
+
+        switch (dir)
+        {
+            case "0":
+                dir = "R";
+                break;
+            case "1":
+                dir = "D";
+                break;
+            case "2":
+                dir = "L";
+                break;
+            case "3":
+                dir = "U";
+                break;
+        }
+
+        Parse($"{dir} {long.Parse(step, System.Globalization.NumberStyles.HexNumber)}");
+
+    }
 
     public Instruction(string instruction)
+    {
+        Parse(instruction);
+    }
+
+    private void Parse(string instruction)
     {
         var splitInstructions = instruction.Split(" ");
 
@@ -67,7 +104,7 @@ public class Grid{
     public bool Start = true;
 
     public void PerformInstruction(Instruction instruction){
-        int steps = instruction.Steps;
+        long steps = instruction.Steps;
         if (Start){
             DigCurrent();
             Start= false;
@@ -92,7 +129,7 @@ public class Grid{
         }
     }
 
-    private void Up(int count){
+    private void Up(long count){
         for (int i = 0; i < count; i++)
         {
             CurrentR = CurrentR - 1;        
@@ -102,7 +139,7 @@ public class Grid{
         }
     }
 
-    private void Down(int count){
+    private void Down(long count){
         for (int i = 0; i < count; i++)
         {
             CurrentR = CurrentR + 1;        
@@ -112,7 +149,7 @@ public class Grid{
         }
     }
     
-    private void Left(int count){
+    private void Left(long count){
         for (int i = 0; i < count; i++)
         {
             CurrentR = CurrentR;        
@@ -122,7 +159,7 @@ public class Grid{
         }
     }
 
-    private void Right(int count){
+    private void Right(long count){
         for (int i = 0; i < count; i++)
         {
             CurrentR = CurrentR;        
@@ -209,13 +246,9 @@ public class Grid{
     }
 
     public void Fill(){
-        System.Console.WriteLine($"Top");
         CheckTopOutside();
-        System.Console.WriteLine($"Bot");
         CheckBottomOutside();
-        System.Console.WriteLine($"Right");
         CheckRightOutside();
-        System.Console.WriteLine($"Left");
         CheckLeftOutside();
 
         foreach (var point in Points.SelectMany(x => x).Where(x => !x.Outside && !x.Dug))
@@ -309,6 +342,24 @@ class Program
 
         grid.Fill();
 
-        System.Console.WriteLine(grid.Sum());
+        System.Console.WriteLine($"Part 1: {grid.Sum()}");
+
+        //Part2
+        instructions = new List<Instruction>();
+        foreach (var row in file)
+        {
+            instructions.Add(new Instruction(row, true));
+        }
+
+        GridPart2 grid2 = new GridPart2();
+
+        foreach (var instr in instructions)
+        {
+            grid2.AddInstruction(instr);
+        }
+
+        grid2.ShiftPositive();
+
+        System.Console.WriteLine($"Part 2: {grid2.Area()}");
     }
 }
