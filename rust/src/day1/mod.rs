@@ -1,6 +1,6 @@
 use std::usize;
 
-fn get_word_number(include_words: bool, row: &String, i: usize) -> Result<u32, &str> {
+fn get_word_number(include_words: bool, row: &str, i: usize) -> Result<u32, &str> {
     let number_words: Vec<String> = vec![
         "one".to_string(),
         "two".to_string(),
@@ -25,7 +25,7 @@ fn get_word_number(include_words: bool, row: &String, i: usize) -> Result<u32, &
         }
     }
 
-    return Err("Not a number");
+    Err("Not a number")
 }
 
 fn find_first_and_last(row: String, include_words: bool) -> u32 {
@@ -55,7 +55,7 @@ fn find_first_and_last(row: String, include_words: bool) -> u32 {
     if first_num.is_none() {
         return 0;
     }
-    return (first_num.unwrap() * 10) + last_num.unwrap();
+    (first_num.unwrap() * 10) + last_num.unwrap()
 }
 
 pub fn get_sum(rows: &Vec<String>, include_words: bool) -> u32 {
@@ -68,7 +68,7 @@ pub fn get_sum(rows: &Vec<String>, include_words: bool) -> u32 {
 }
 
 pub fn solve() {
-    let rows = crate::utils::split_into_row(crate::utils::load_input("./day1/input.txt"));
+    let rows = crate::utils::split_into_rows_vec(crate::utils::load_input("./day1/input.txt"));
 
     println!("{}", get_sum(&rows, false));
     println!("{}", get_sum(&rows, true));

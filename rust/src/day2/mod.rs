@@ -40,7 +40,7 @@ impl Game {
     }
 }
 
-fn parse_hands(hands: &String) -> Vec<Hand> {
+fn parse_hands(hands: &str) -> Vec<Hand> {
     let mut parsed_hands: Vec<Hand> = Vec::new();
 
     for hand in hands.split("; ") {
@@ -65,11 +65,7 @@ fn parse_hand(hand: &str) -> Hand {
         }
     }
 
-    Hand {
-        red: red,
-        blue: blue,
-        green: green,
-    }
+    Hand { red, blue, green }
 }
 
 fn get_number_from_ball(ball: &str) -> u16 {
@@ -105,11 +101,11 @@ fn find_valid_games_sum(games: &Vec<String>, max_red: u16, max_green: u16, max_b
 
     for (i, game) in games.iter().enumerate() {
         if game.is_game_possible(max_red, max_green, max_blue) {
-            sum += u32::try_from(i).unwrap() + 1 as u32;
+            sum += u32::try_from(i).unwrap() + 1;
         }
     }
 
-    return sum;
+    sum
 }
 
 fn find_games_power_sum(games: &Vec<String>) -> u32 {
@@ -125,7 +121,7 @@ fn find_games_power_sum(games: &Vec<String>) -> u32 {
 }
 
 pub fn solve() {
-    let rows = crate::utils::split_into_row(crate::utils::load_input("./day2/input.txt"));
+    let rows = crate::utils::split_into_rows_vec(crate::utils::load_input("./day2/input.txt"));
 
     println!("{}", find_valid_games_sum(&rows, 12, 13, 14));
     println!("{}", find_games_power_sum(&rows));
